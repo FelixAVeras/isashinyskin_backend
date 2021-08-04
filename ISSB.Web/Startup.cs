@@ -1,16 +1,20 @@
-﻿using ISSB.Web.Models.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using ISSB.Web.Models.Helper;
+using ISSB.Web.Models;
+using ISSB.Web.Models.Data;
+using ISSB.Web.Models.Reposotories;
 
 namespace ISSB.Web
 {
@@ -23,21 +27,33 @@ namespace ISSB.Web
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<CookiePolicyOptions>(options =>
             {
-                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-            services.AddDbContext<DataContext>(options =>
-         options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<DataContext>(options => options.UseSqlServer(
+                Configuration.GetConnectionString("DefaultConnection"))
+            );
+
+            // services.AddTransient<SeederDB>();
+            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IUserHelper, UserHelper>();
+
+            services.AddIdentity<User, IdentityRole>(option => {
+                option.User.RequireUniqueEmail = true;
+                option.Password.RequireDigit = false;
+                option.Password.RequiredUniqueChars = 0;
+                option.Password.RequireLowercase = false;
+                option.Password.RequireNonAlphanumeric = false;
+                option.Password.RequireUppercase = false;
+                option.Password.RequiredLength = 8;
+            }).AddEntityFrameworkStores<DataContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -55,6 +71,7 @@ namespace ISSB.Web
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            app.UseAuthentication();
             app.UseCookiePolicy();
 
             app.UseMvc(routes =>

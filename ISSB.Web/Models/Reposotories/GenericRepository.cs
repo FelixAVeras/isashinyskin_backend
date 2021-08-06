@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ISSB.Web.Models.Reposotories
 {
-    public class GenericRepository<T> : IGenericRepository<T> where T : class
+    public class GenericRepository<T> : IGenericRepository<T> where T : class, IEntity
     {
         private readonly DataContext _context;
 
@@ -16,34 +16,42 @@ namespace ISSB.Web.Models.Reposotories
             _context = context;
         }
 
-        IQueryable<T> IGenericRepository<T>.GetAll()
+        public IQueryable<T> GetAll()
         {
             return _context.Set<T>().AsNoTracking();
         }
 
-        Task<T> IGenericRepository<T>.GetByIdAsync(int id)
+        public async Task<T> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _context.Set<T>().AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
         }
 
-        Task IGenericRepository<T>.CreateAsync(T entity)
+        public async Task CreateAsync(T entity)
         {
-            throw new NotImplementedException();
+            await _context.Set<T>().AddAsync(entity);
+            await SaveAllAsync();
         }
 
-        Task IGenericRepository<T>.UpdateAsync(T entity)
+        public async Task UpdateAsync(T entity)
         {
-            throw new NotImplementedException();
+            _context.Set<T>().Update(entity);
+            await SaveAllAsync();
         }
 
-        Task IGenericRepository<T>.DeleteAsync(T entity)
+        public async Task DeleteAsync(T entity)
         {
-            throw new NotImplementedException();
+            _context.Set<T>().Remove(entity);
+            await SaveAllAsync();
         }
 
-        Task<bool> IGenericRepository<T>.ExistsAsync(int id)
+        public async Task<bool> ExistsAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _context.Set<T>().AnyAsync(e => e.Id == id);
+        }
+
+        public async Task<bool> SaveAllAsync()
+        {
+            return await _context.SaveChangesAsync() > 0;
         }
     }
 }

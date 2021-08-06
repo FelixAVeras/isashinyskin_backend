@@ -7,22 +7,25 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ISSB.Web.Models;
 using ISSB.Web.Models.Data;
+using ISSB.Web.Models.Reposotories;
 
 namespace ISSB.Web.Controllers
 {
     public class ProductsController : Controller
     {
+        private readonly IProductRepository _productRepository;
         private readonly DataContext _context;
 
-        public ProductsController(DataContext context)
+        public ProductsController(IProductRepository productRepository, DataContext context)
         {
+            _productRepository = productRepository;
             _context = context;
         }
 
         // GET: Products
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            return View(await _context.Products.ToListAsync());
+            return View(_productRepository.GetAll());
         }
 
         // GET: Products/Details/5
@@ -33,8 +36,8 @@ namespace ISSB.Web.Controllers
                 return NotFound();
             }
 
-            var product = await _context.Products
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var product = await _productRepository.GetByIdAsync(id.Value);
+
             if (product == null)
             {
                 return NotFound();
@@ -50,18 +53,16 @@ namespace ISSB.Web.Controllers
         }
 
         // POST: Products/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,ProductName,ProductDescription,Price,Stock")] Product product)
+        public async Task<IActionResult> Create(Product product)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(product);
-                await _context.SaveChangesAsync();
+                await _productRepository.CreateAsync(product);
                 return RedirectToAction(nameof(Index));
             }
+
             return View(product);
         }
 
@@ -86,19 +87,13 @@ namespace ISSB.Web.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,ProductName,ProductDescription,Price,Stock")] Product product)
+        public async Task<IActionResult> Edit(Product product)
         {
-            if (id != product.Id)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(product);
-                    await _context.SaveChangesAsync();
+                    await _productRepository.UpdateAsync(product);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -139,9 +134,9 @@ namespace ISSB.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-            _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
+            var product = await _productRepository.GetByIdAsync(id);
+            await _productRepository.DeleteAsync(product);
+
             return RedirectToAction(nameof(Index));
         }
 

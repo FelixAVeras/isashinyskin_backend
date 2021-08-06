@@ -13,32 +13,30 @@ namespace ISSB.Web.Controllers.API
     [Route("api/[Controller]")]
     public class ProductsController : Controller
     {
-        //private readonly IProductRepository _productRepository;
-        private readonly DataContext _context;
+        private readonly IProductRepository _productRepository;
 
-        public ProductsController(/*IProductRepository productRepository,*/ DataContext context)
+        public ProductsController(IProductRepository productRepository)
         {
-            //_productRepository = productRepository;
-            _context = context;
+            _productRepository = productRepository;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public IActionResult GetProducts()
         {
-            return await _context.Products.ToListAsync();
+            return Ok(_productRepository.GetAll());
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProductById(int id)
-        {
-            var product = await _context.Products.FindAsync(id);
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<Product>> GetProductById(int id)
+        //{
+        //    var product = await _context.Products.FindAsync(id);
             
-            if (product == null)
-            {
-                return NotFound();
-            }
+        //    if (product == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return product;
-        }
+        //    return product;
+        //}
     }
 }

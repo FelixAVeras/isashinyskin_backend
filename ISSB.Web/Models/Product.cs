@@ -22,6 +22,12 @@ namespace ISSB.Web.Models
         [DisplayFormat(ApplyFormatInEditMode = false, DataFormatString = "{0:C2}")]
         public decimal Price { get; set; }
 
+        [Display(Name = "Imagen Producto")]
+        public string ImageUrl { get; set; }
+
+        [Display(Name = "Esta Disponible?")]
+        public bool IsAvailable { get; set; }
+
         public double Stock { get; set; }
     }
 }

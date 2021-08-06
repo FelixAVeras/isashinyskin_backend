@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using ISSB.Web.Models;
 using ISSB.Web.Models.Data;
 using ISSB.Web.Models.Reposotories;
+using ISSB.Web.Models.ViewModel;
+using System.IO;
 
 namespace ISSB.Web.Controllers
 {
@@ -55,15 +57,48 @@ namespace ISSB.Web.Controllers
         // POST: Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product product)
+        public async Task<IActionResult> Create(ProductViewModel view)
         {
             if (ModelState.IsValid)
             {
+                var path = string.Empty;
+
+                if (view.ImageFile != null && view.ImageFile.Length > 0)
+                {
+                    path = Path.Combine(
+                        Directory.GetCurrentDirectory(),
+                        "wwwroot\\images\\ProductPhoto",
+                        view.ImageFile.FileName);
+
+                    using (var stream = new FileStream(path, FileMode.Create))
+                    {
+                        await view.ImageFile.CopyToAsync(stream);
+                    }
+
+                    path = $"~/images/ProductPhoto/{view.ImageFile.FileName}";
+                }
+
+                var product = this.ToProduct(view, path);
+
                 await _productRepository.CreateAsync(product);
                 return RedirectToAction(nameof(Index));
             }
 
-            return View(product);
+            return View(view);
+        }
+
+        private Product ToProduct(ProductViewModel view, string path)
+        {
+            return new Product
+            {
+                Id = view.Id,
+                ProductName = view.ProductName,
+                ProductDescription = view.ProductDescription,
+                Price = view.Price,
+                ImageUrl = path,
+                IsAvailable = view.IsAvailable,
+                Stock = view.Stock
+            };
         }
 
         // GET: Products/Edit/5
@@ -75,11 +110,29 @@ namespace ISSB.Web.Controllers
             }
 
             var product = await _context.Products.FindAsync(id);
+
             if (product == null)
             {
                 return NotFound();
             }
-            return View(product);
+
+            var view = this.ToProductViewModel(product);
+
+            return View(view);
+        }
+
+        private ProductViewModel ToProductViewModel(Product product)
+        {
+            return new ProductViewModel
+            {
+                Id = product.Id,
+                ProductName = product.ProductName,
+                ProductDescription = product.ProductDescription,
+                Price = product.Price,
+                IsAvailable = product.IsAvailable,
+                ImageUrl = product.ImageUrl,
+                Stock = product.Stock
+            };
         }
 
         // POST: Products/Edit/5
@@ -87,17 +140,35 @@ namespace ISSB.Web.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Product product)
+        public async Task<IActionResult> Edit(ProductViewModel view)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
+                    var path = view.ImageUrl;
+
+                    if (view.ImageFile != null && view.ImageFile.Length > 0)
+                    {
+                        path = Path.Combine(
+                            Directory.GetCurrentDirectory(),
+                            "wwwroot\\images\\ProductPhoto",
+                            view.ImageFile.FileName);
+
+                        using (var stream = new FileStream(path, FileMode.Create))
+                        {
+                            await view.ImageFile.CopyToAsync(stream);
+                        }
+
+                        path = $"~/images/ProductPhoto/{view.ImageFile.FileName}";
+                    }
+
+                    var product = this.ToProduct(view, path);
                     await _productRepository.UpdateAsync(product);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ProductExists(product.Id))
+                    if (!ProductExists(view.Id))
                     {
                         return NotFound();
                     }
@@ -108,7 +179,7 @@ namespace ISSB.Web.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(product);
+            return View(view);
         }
 
         // GET: Products/Delete/5

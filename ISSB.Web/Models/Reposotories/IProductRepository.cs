@@ -7,5 +7,6 @@ namespace ISSB.Web.Models.Reposotories
 {
     public interface IProductRepository : IGenericRepository<Product> 
     {
+
     }
 }

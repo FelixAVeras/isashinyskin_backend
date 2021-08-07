@@ -1,4 +1,5 @@
 ﻿using ISSB.Web.Models;
+using ISSB.Web.Models.ViewModel;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
@@ -11,5 +12,7 @@ namespace ISSB.Web.Models.Helper
     {
         Task<User> GetUserByEmailAsync(string email);
         Task<IdentityResult> AddUserAsync(User user, string password);
+        Task<SignInResult> LoginAsync(LoginViewModel model);
+        Task LogoutAsync();
     }
 }

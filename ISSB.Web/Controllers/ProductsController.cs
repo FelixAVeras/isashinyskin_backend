@@ -10,9 +10,11 @@ using ISSB.Web.Models.Data;
 using ISSB.Web.Models.Reposotories;
 using ISSB.Web.Models.ViewModel;
 using System.IO;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ISSB.Web.Controllers
 {
+    [Authorize]
     public class ProductsController : Controller
     {
         private readonly IProductRepository _productRepository;

@@ -29,5 +29,19 @@ namespace ISSB.Web.Models
         public bool IsAvailable { get; set; }
 
         public double Stock { get; set; }
+
+        public string ImageFullPath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(this.ImageUrl))
+                {
+                    return null;
+                }
+
+                // return $"URL del proyecto publicado{this.ImageUrl.Substring(1)}";
+                return $"https://localhost:44343{this.ImageUrl.Substring(1)}";
+            }
+        }
     }
 }

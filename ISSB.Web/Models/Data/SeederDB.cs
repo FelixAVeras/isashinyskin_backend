@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ISSB.Web.Models.Helper;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -10,11 +12,13 @@ namespace ISSB.Web.Models.Data
     public class SeederDB
     {
         private readonly DataContext _context;
+        private readonly IUserHelper _userHelper;
         private Random _random;
 
-        public SeederDB(DataContext context)
+        public SeederDB(DataContext context, IUserHelper userHelper)
         {
             _context = context;
+            _userHelper = userHelper;
             _random = new Random();
         }
 
@@ -22,6 +26,41 @@ namespace ISSB.Web.Models.Data
         {
             await _context.Database.EnsureCreatedAsync();
 
+            await _userHelper.checkRoleAsync("Admin");
+            await _userHelper.checkRoleAsync("Customer");
+
+            //Add user with role
+            var user = await _userHelper.GetUserByEmailAsync("fcarvajal44@gmail.com");
+            
+            if (user == null)
+            {
+                user = new User
+                {
+                    FirstName = "Felix",
+                    LastName = "Veras",
+                    Email = "fcarvajal44@gmail.com",
+                    UserName = "FelixAVeras",
+                    PhoneNumber = "8494528882"
+                };
+
+                var result = await _userHelper.AddUserAsync(user, "test1234");
+
+                if (result != IdentityResult.Success)
+                {
+                    throw new InvalidOperationException("No se pudo crear el usuario en el seeder");
+                }
+
+                await _userHelper.AddToRoleAsync(user, "Admin");
+            }
+
+            var isInRole = await _userHelper.IsUserInRoleAsync(user, "Admin");
+
+            if (!isInRole)
+            {
+                await _userHelper.AddToRoleAsync(user, "Admin");
+            }
+
+            // Add Products
             if (!_context.Products.Any())
             {
                 this.AddProduct(

@@ -12,11 +12,16 @@ namespace ISSB.Web.Models.Helper
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public UserHelper(UserManager<User> userManager, SignInManager<User> signInManager)
+        public UserHelper(
+            UserManager<User> userManager, 
+            SignInManager<User> signInManager, 
+            RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _roleManager = roleManager;
         }
 
         public async Task<IdentityResult> AddUserAsync(User user, string password)

@@ -41,7 +41,7 @@ namespace ISSB.Web
                 Configuration.GetConnectionString("DefaultConnection"))
             );
 
-            // services.AddTransient<SeederDB>();
+            services.AddTransient<SeederDB>();
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<IUserHelper, UserHelper>();
 
